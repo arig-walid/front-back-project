@@ -63,3 +63,22 @@ button {
 button.hidden {
     display: none;
 }
+#mapContainer {
+    position: relative;
+    display: inline-block;
+}
+
+#mapImage {
+    width: 100%;
+    height: auto;
+    cursor: crosshair;
+}
+
+#coords {
+    margin-top: 10px;
+}
+
+.message {
+    color: green;
+    margin-top: 10px;
+}
