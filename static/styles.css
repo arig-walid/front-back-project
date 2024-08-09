@@ -2,13 +2,18 @@
 .container {
     text-align: center;
     padding: 20px;
-    border-radius: 8px;
-    /* box-shadow: 5px 5px  2px rgb(57, 57, 66);s */
+    border-radius: 30px;
+    border: 2px solid rgb(24, 21, 21);
+    padding: 50px;
+    -webkit-border-radius: 30px;
+    -moz-border-radius: 30px;
+    -ms-border-radius: 30px;
+    -o-border-radius: 30px;
 }
 body {
     margin-top: 200px;
     margin-bottom: 200px;
-    background-image: url(/starry-galaxy-dark-infinite-milky-way-twinkle-cosmos-astrology-interstellar-background_695763-1446.avif);
+    background-image: url(/static/images/R\ \(1\).jpeg);
     background-size: cover;
     display: flex;
     justify-content: center;
@@ -16,6 +21,7 @@ body {
     flex-direction: column;
     height: 100vh;
 }
+
 .buttons{
     display: flex;
     justify-content: center;
@@ -47,4 +53,10 @@ img {
 }
 h1 {
     color: whitesmoke ;
+}
+#image-input {
+    color: white;
+}
+button {
+    padding: 3px;
 }
