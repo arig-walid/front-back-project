@@ -4,45 +4,30 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Upload Image and Coordinates</title>
-    <style>
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            flex-direction: column;
-            height: 100vh;
-        }
-
-        img {
-            max-width: 100%;
-            max-height: 500px;
-            cursor: pointer;
-        }
-
-        #image-container {
-            position: relative;
-        }
-
-        #messages {
-            color: red;
-        }
-    </style>
+    <title>Yolo Measurements </title>
+    <link rel="stylesheet" href="normalize.css">
+    <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-    <h1>Upload Image and Coordinates</h1>
-    <input type="file" id="image-input"><br><br>
-    <div id="image-container"></div><br>
-    <input type="text" id="base_coordinates" placeholder="Base Coordinates (x,y)">
-    <input type="text" id="reference_point" placeholder="Reference Point (x,y)">
-    <input type="text" id="height_point" placeholder="Height Point (x,y)"><br><br>
-    <button id="initiate-btn">Initiate</button>
-    <button id="scale-btn" style="display:none;">Scale Using Reference</button>
-    <button id="height-btn" style="display:none;">Estimate Height</button>
-    <button id="refresh-btn">Refresh</button><br><br>
+    <div class="container">
+        <h1>Upload image and get measurments </h1>
+        <input type="file" id="image-input"><br><br>
+        <div id="image-container"></div><br>
+        <input type="text" id="base_coordinates" placeholder="Base Coordinates (x,y)">
+        <input type="text" id="reference_point" placeholder="Reference Point (x,y)">
+        <input type="text" id="height_point" placeholder="Height Point (x,y)"><br><br>
+        <div class="buttons">
+            <button id="initiate-btn">Initiate</button>
+            <button id="scale-btn" style="display:none;">Scale Using Reference</button>
+            <button id="height-btn" style="display:none;">Estimate Height</button>
+            <button id="refresh-btn">Refresh</button>
+        </div>
+
+        <div id="result-image"></div>
+    </div>
+    <br><br>
     <label id="messages"></label>
-    <div id="result-image"></div>
 
     <script>
         let basePoint = null;
@@ -101,10 +86,10 @@
                     console.log(data);
                     document.getElementById('messages').textContent = "initiate";
                     if (!data.got_scale) {
-                        document.getElementById('messages').textContent = 'Error: Image does not have a valid FOV. To have a scale please choose a reference point.';
+                        document.getElementById('messages').textContent = 'Image does not have a valid FOV. to have a scale please choose reference point';
                         document.getElementById('scale-btn').style.display = 'block';
                     } else {
-                        document.getElementById('messages').textContent = "initiate done";
+                        document.getElementById('messages').textContent = "Initiate done and we have a scale please choose the Top point of what you want to measure";
                         document.getElementById('height-btn').style.display = 'block';
 
                     }
@@ -175,6 +160,15 @@
         });
 
         document.getElementById('refresh-btn').addEventListener('click', function () {
+            // Clear the input fields
+            document.getElementById('base_coordinates').value = '';
+            document.getElementById('reference_point').value = '';
+            document.getElementById('height_point').value = '';
+            document.getElementById('image-input').value = '';
+            document.getElementById('messages').textContent = '';
+            document.getElementById('image-container').innerHTML = '';
+
+            // Reload the page
             window.location.reload();
         });
     </script>
