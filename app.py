@@ -21,8 +21,6 @@ import traceback
 # import io
 from datetime import timedelta
 import time
-
-app = Flask(__name__)
 app.config['MAX_CONTENT_LENGTH'] = 16 * 4096 * 4096  # 16 MB
 app.secret_key = os.urandom(24)
 

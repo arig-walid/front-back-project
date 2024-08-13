@@ -5,14 +5,115 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Yolo Measurements </title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='normalize.css') }}">
-    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        .container {
+            text-align: center;
+            padding: 20px;
+            border-radius: 30px;
+            border: 2px solid rgb(24, 21, 21);
+            padding: 50px;
+            -webkit-border-radius: 30px;
+            -moz-border-radius: 30px;
+            -ms-border-radius: 30px;
+            -o-border-radius: 30px;
+            background-color: rgba(255, 255, 255, 0.8);
+
+        }
+
+        body {
+            margin-top: 200px;
+            margin-bottom: 200px;
+            background-image: url(/static/images/R\ \(1\).jpeg);
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        img {
+            max-width: 100%;
+            max-height: 500px;
+            cursor: url(/mouse.png), auto;
+        }
+
+        #image-container {
+            position: relative;
+            cursor: url(/Untitled-1.png);
+        }
+
+        #image-container img {
+            width: 500px;
+            height: auto;
+            cursor: url(/mouse.png), auto;
+
+            /* Custom cursor applied here */
+        }
+
+        #messages {
+            color: rgb(223, 26, 26);
+            background-color: rgba(255, 255, 255, 0.8);
+            padding: 10px 10px 10px 10px;
+            box-shadow: 2px 2px 2px 2px rgb(36, 36, 51);
+            font-weight: 800;
+            border-radius: 10px;
+            -webkit-border-radius: 10px;
+            -moz-border-radius: 10px;
+            -ms-border-radius: 10px;
+            -o-border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        input[type="file"] {
+            margin-top: 20px;
+        }
+
+        input[type="text"] {
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 3px;
+        }
+
+        #image-input {
+            color: rgb(27, 27, 27);
+            cursor: url(/mouse.png), auto;
+
+        }
+
+        #instructions {
+            background-color: rgba(255, 255, 255, 0.3);
+            padding: 10px 10px 10px 10px;
+            box-shadow: 2px 2px 2px 2px rgb(36, 36, 51);
+            font-weight: 100;
+            border-radius: 10px;
+            -webkit-border-radius: 10px;
+            -moz-border-radius: 10px;
+            -ms-border-radius: 10px;
+            -o-border-radius: 10px;
+        }
+    </style>
 </head>
 
 <body>
     <!-- UI structure -->
     <div class="container">
         <h1>Upload image and get measurments </h1>
+        <div id="instructions">Upload Image, choose The base point, then click Initiate</div>
         <input type="file" id="image-input">
         <div id="image-container"></div><br>
         <!-- coordinates points -->
@@ -35,6 +136,14 @@
 
     <!-- functionality control -->
     <script>
+        // // change to have the real scale of the image 
+        // const tempImage = new Image();
+        // tempImage.src = imageUrl;
+
+        // tempImage.onload = function () {
+        //     const originalWidth = tempImage.naturalWidth;
+        //     const originalHeight = tempImage.naturalHeight;
+        // }
         let basePoint = null;
         let referencePoint = null;
         let heightPoint = null;
@@ -72,6 +181,10 @@
             const formData = new FormData();
             formData.append('image', document.getElementById('image-input').files[0]);
             formData.append('base_coordinates', baseCoordinates);
+            // // change to have the real scale of the image 
+            // formData.append('original_width', imageElement.naturalWidth);
+            // formData.append('original_height', imageElement.naturalHeight);
+
 
             document.getElementById('messages').textContent = "in initiate";
 
@@ -92,13 +205,17 @@
                     document.getElementById('messages').textContent = "initiate";
                     // imp. condition to differentiate between the images have meta data and images don't have
                     if (!data.got_scale) {
-                        document.getElementById('messages').textContent = 'Image does not have a valid FOV. to have a scale please choose reference point';
+                        document.getElementById('instructions').textContent = 'To have a scale please choose reference point and click Scale using reference';
+                        document.getElementById('messages').textContent = 'Image does not have a valid FOV.';
                         document.getElementById('scale-btn').style.display = 'block';
                     } else {
-                        document.getElementById('messages').textContent = "Initiate done and we have a scale please choose the Top point of what you want to measure";
+                        document.getElementById('instructions').textContent = 'please choose the Top point of what you want to measure, and click Estimate height';
+
+                        document.getElementById('messages').textContent = "Initiate done and we have a scale";
                         document.getElementById('height-btn').style.display = 'block';
 
                     }
+                    document.getElementById('initiate-btn').style.display = 'none';
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -127,8 +244,10 @@
                     console.log(data);
                     document.getElementById('messages').textContent = data.message;
                     if (data.got_scale) {
+                        document.getElementById('instructions').textContent = 'please choose the Top point of what you want to measure, and click Estimate height';
                         document.getElementById('height-btn').style.display = 'block';
                     }
+                    document.getElementById('scale-btn').style.display = 'none';
                 })
                 .catch(error => {
                     console.error('Error:', error);
@@ -156,8 +275,12 @@
                     return response.json();
                 })
                 .then(data => {
+                    const heightInInches = data.height; // Assuming backend returns height in inches
+                    const heightInFeet = (heightInInches / 12).toFixed(2); // Convert inches to feet and round to 2 decimal places
                     console.log(data);
-                    document.getElementById('messages').textContent = data.height;
+                    document.getElementById('messages').textContent = `The height is ${heightInFeet};`
+                    // ft (${heightInInches} inches)
+                    // document.getElementById('messages').textContent = data.height;
                 })
                 .catch(error => {
                     console.error('Error:', error);

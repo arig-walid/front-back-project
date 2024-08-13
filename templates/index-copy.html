@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yolo Measurements </title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='normalize.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
+    <style>
+        body {
+            margin: 0;
+            background-image: url(/static/images/R\ \(1\).jpeg);
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        .container {
+            text-align: center;
+            padding: 20px;
+            border-radius: 30px;
+            border: 2px solid rgb(24, 21, 21);
+            background-color: rgba(255, 255, 255, 0.8);
+        }
+
+        img {
+            max-width: 100%;
+            max-height: 500px;
+            cursor: pointer;
+            display: block;
+            margin: 0 auto;
+        }
+
+        #image-container {
+            position: relative;
+            display: inline-block;
+            margin: 0 auto;
+            margin-bottom: 80px;
+        }
+
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        #messages {
+            color: rgb(223, 26, 26);
+            background-color: rgb(216, 230, 202);
+            padding: 10px;
+            box-shadow: 2px 2px 2px rgb(36, 36, 51);
+            font-weight: 800;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        h1 {
+            color: #333;
+        }
+
+        input[type="file"] {
+            margin-top: 20px;
+        }
+
+        input[type="text"] {
+            margin-top: 10px;
+        }
+
+        button {
+            padding: 10px 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>Upload Image and Get Measurements</h1>
+        <input type="file" id="image-input">
+        <div id="image-container">
+            <canvas id="canvas"></canvas>
+        </div>
+        <input type="text" id="base_coordinates" placeholder="Base Coordinates (x,y)">
+        <input type="text" id="reference_point" placeholder="Reference Point (x,y)">
+        <input type="text" id="height_point" placeholder="Height Point (x,y)">
+        <div class="buttons">
+            <button id="initiate-btn">Initiate</button>
+            <button id="scale-btn" style="display:none;">Scale Using Reference</button>
+            <button id="height-btn" style="display:none;">Estimate Height</button>
+            <button id="refresh-btn">Refresh</button>
+        </div>
+        <div id="messages"></div>
+    </div>
+
+    <script>
+        let basePoint = null;
+        let referencePoint = null;
+        let heightPoint = null;
+        let canvas = document.getElementById('canvas');
+        let ctx = canvas.getContext('2d');
+        let imageElement = null;
+
+        document.getElementById('image-input').addEventListener('change', function (event) {
+            const file = event.target.files[0];
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                const imageUrl = e.target.result;
+
+                imageElement = document.createElement('img');
+                imageElement.src = imageUrl;
+                document.getElementById('image-container').appendChild(imageElement);
+
+                imageElement.onload = function () {
+                    // Adjust canvas size to match the image size
+                    canvas.width = imageElement.width;
+                    canvas.height = imageElement.height;
+
+                    imageElement.style.position = "relative";
+                    canvas.style.width = imageElement.width + "px";
+                    canvas.style.height = imageElement.height + "px";
+
+                    // Center the image and canvas container
+                    document.getElementById('image-container').style.width = `${imageElement.width}px`;
+                    document.getElementById('image-container').style.height = `${imageElement.height}px`;
+
+                    imageElement.addEventListener('click', function (event) {
+                        const rect = imageElement.getBoundingClientRect();
+                        const x = event.clientX - rect.left;
+                        const y = event.clientY - rect.top;
+
+                        ctx.clearRect(0, 0, canvas.width, canvas.height);
+                        ctx.beginPath();
+                        ctx.arc(x, y, 5, 0, 2 * Math.PI, false);
+                        ctx.fillStyle = 'red';
+                        ctx.fill();
+
+                        if (!basePoint) {
+                            basePoint = { x, y };
+                            document.getElementById('base_coordinates').value = `${x},${y}`;
+                        } else if (!referencePoint && document.getElementById('scale-btn').style.display === 'block') {
+                            referencePoint = { x, y };
+                            document.getElementById('reference_point').value = `${x},${y}`;
+                        } else {
+                            document.getElementById('height_point').value = `${x},${y}`;
+                        }
+                    });
+                };
+            };
+            reader.readAsDataURL(file);
+        });
+
+        document.getElementById('initiate-btn').addEventListener('click', function () {
+            const baseCoordinates = document.getElementById('base_coordinates').value;
+            const formData = new FormData();
+            formData.append('image', document.getElementById('image-input').files[0]);
+            formData.append('base_coordinates', baseCoordinates);
+            formData.append('original_width', imageElement.naturalWidth);
+            formData.append('original_height', imageElement.naturalHeight);
+
+            document.getElementById('messages').textContent = "Initiating...";
+
+            fetch('https://mariomagdy.pythonanywhere.com/initiate', {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('messages').textContent = data.message;
+                    if (!data.got_scale) {
+                        document.getElementById('messages').textContent = 'Image does not have a valid FOV. Please choose a reference point.';
+                        document.getElementById('scale-btn').style.display = 'block';
+                    } else {
+                        document.getElementById('messages').textContent = "Initiation done. Please choose the top point of the object to measure.";
+                        document.getElementById('height-btn').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('messages').textContent = `Error: ${error.message}`;
+                });
+        });
+
+        document.getElementById('scale-btn').addEventListener('click', function () {
+            const referenceCoordinates = document.getElementById('reference_point').value;
+            const formData = new FormData();
+            formData.append('reference_point', referenceCoordinates);
+
+            fetch('https://mariomagdy.pythonanywhere.com/scale_using_reference', {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('messages').textContent = data.message;
+                    if (data.got_scale) {
+                        document.getElementById('height-btn').style.display = 'block';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('messages').textContent = `Error: ${error.message}`;
+                });
+        });
+
+        document.getElementById('height-btn').addEventListener('click', function () {
+            const heightCoordinates = document.getElementById('height_point').value;
+            const formData = new FormData();
+            formData.append('height_point', heightCoordinates);
+
+            document.getElementById('messages').textContent = "Calculating height...";
+
+            fetch('https://mariomagdy.pythonanywhere.com/estimate_height', {
+                method: 'POST',
+                body: formData,
+                credentials: 'include'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    const heightInInches = data.height;
+                    const heightInFeet = (heightInInches / 12).toFixed(2);
+                    document.getElementById('messages').textContent = `The height is ${heightInFeet} ft (${heightInInches} inches)`;
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('messages').textContent = `Error: ${error.message}`;
+                });
+        });
+
+        document.getElementById('refresh-btn').addEventListener('click', function () {
+            document.getElementById('base_coordinates').value = '';
+            document.getElementById('reference_point').value = '';
+            document.getElementById('height_point').value = '';
+            document.getElementById('image-input').value = '';
+            document.getElementById('messages').textContent = '';
+            document.getElementById('image-container').innerHTML = '';
+            window.location.reload();
+        });
+    </script>
+</body>
+
+</html>

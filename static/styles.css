@@ -9,6 +9,8 @@
     -moz-border-radius: 30px;
     -ms-border-radius: 30px;
     -o-border-radius: 30px;
+    background-color: rgba(255, 255, 255, 0.8);
+
 }
 body {
     margin-top: 200px;
@@ -52,8 +54,9 @@ img {
     -o-border-radius: 10px;
 }
 h1 {
-    color: whitesmoke ;
+    color: whitesmoke;
 }
+
 #image-input {
     color: white;
 }
