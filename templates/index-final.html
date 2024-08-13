@@ -278,6 +278,7 @@
                     const heightInInches = data.height; // Assuming backend returns height in inches
                     const heightInFeet = (heightInInches / 12).toFixed(2); // Convert inches to feet and round to 2 decimal places
                     console.log(data);
+                    document.getElementById('instructions').textContent = 'click Refresh to Enter another image';
                     document.getElementById('messages').textContent = `The height is ${heightInFeet};`
                     // ft (${heightInInches} inches)
                     // document.getElementById('messages').textContent = data.height;
